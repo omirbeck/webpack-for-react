@@ -1,79 +1,95 @@
-const path = require('path')
+const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const autoprefixer = require('autoprefixer');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const autoprefixer = require("autoprefixer");
 
-module.exports = {
-  entry: './src/index.js',
-  output: {
-    path: path.resolve(__dirname, './dist'),
-    filename: '[name].bundle.js'
-  },
-  module: {
-    rules: [
-      {
-        test: /\.(js)x?$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
+module.exports = (env = {}) => {
+
+  const { mode = "development" } = env;
+
+  const isProd = mode === "production";
+  const isDev = mode === "development";
+
+  const getStyleLoaders = () => {
+    return [
+      isProd ? MiniCssExtractPlugin.loader : "style-loader"
+    ]
+  }
+
+  const getPlugins = () => {
+    const plugins = [
+        new HtmlWebpackPlugin({
+          title: "React JS",
+          template: "./src/index.html",
+        })
+      ];
+      if (isProd) {
+        plugins.push(new MiniCssExtractPlugin({
+          filename: "main-[hash:8].css",
+        }))
+      }
+  }
+  
+  return {
+    mode: isProd ? "production" : isDev && "development",
+    entry: "./src/index.js",
+    output: {
+      path: path.resolve(__dirname, "./dist"),
+      filename: "[name].bundle.js",
+    },
+    module: {
+      rules: [
+        {
+          test: /\.(js)x?$/,
+          exclude: /node_modules/,
+          loader: "babel-loader",
         },
-      },
-      {
-        test: /\.(sa|sc|c)ss$/,
-        use: [
-          {
-            loader: 'style-loader',
-          },
-          {
-            loader: 'css-loader',
-            options: { sourceMap: true },
-          },
-          {
-            loader: 'postcss-loader',
-            options: {
-              postcssOptions: {
-                sourceMap: true,
-                plugins: [
-                  autoprefixer,
-                ],
-              }
+        {
+          test: /\.(sa|sc|c)ss$/,
+          use: [ ...getStyleLoaders(),
+            {
+              loader: "css-loader",
             },
-          },
-          {
-            loader: 'sass-loader',
-            options: { 
-              sourceMap: true,
-              sassOptions: {
-                outputStyle: "compressed",
+            {
+              loader: "postcss-loader",
+            },
+            {
+              loader: "sass-loader",
+            },
+          ],
+        },
+        {
+          test: /\.(png|gif|svg|jpe?g)$/,
+          use: [
+            {
+              loader: "file-loader",
+              options: {
+                name: "[path][name].[ext]",
               },
             },
-          },
-        ],
-      },
-      {
-        test: /\.(png|gif|svg|jpe?g)$/,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {
-              name: '[path][name].[ext]',
+            "img-loader",
+          ],
+        },
+        {
+          test: /\.(ttf|otf|eot|woff|woff2)$/,
+          use: [
+            {
+              loader: "file-loader",
+              options: {
+                outputPath: "fonts",
+                name: "[name].[ext]",
+              },
             },
-          },
-          'img-loader',
-        ],
-      },
-    ],
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: "./src/index.html"
-    })
-  ],
-  // resolve: {
-  //   extensions: ['.jsx', '.js', '.css'],
-  // },
-  devServer: {
-    contentBase: path.resolve(__dirname, './dist'),
-    compress: true,
-    port: 9000
-  }
-}
+          ],
+        },
+      ],
+    },
+    plugins: getPlugins(),
+    devServer: {
+      contentBase: path.resolve(__dirname, "./dist"),
+      open: true,
+      compress: true,
+      port: 9000,
+    },
+  };
+};
