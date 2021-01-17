@@ -28,6 +28,7 @@ module.exports = (env = {}) => {
           filename: "main-[hash:8].css",
         }))
       }
+      return plugins
   }
   
   return {
@@ -48,13 +49,28 @@ module.exports = (env = {}) => {
           test: /\.(sa|sc|c)ss$/,
           use: [ ...getStyleLoaders(),
             {
-              loader: "css-loader",
+              loader: 'css-loader',
+              options: { sourceMap: true },
             },
             {
-              loader: "postcss-loader",
+              loader: 'postcss-loader',
+              options: {
+                postcssOptions: {
+                  sourceMap: true,
+                  plugins: [
+                    autoprefixer,
+                  ],
+                }
+              },
             },
             {
-              loader: "sass-loader",
+              loader: 'sass-loader',
+              options: { 
+                sourceMap: true,
+                sassOptions: {
+                  outputStyle: "compressed",
+                },
+              },
             },
           ],
         },
